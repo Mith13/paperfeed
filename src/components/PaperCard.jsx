@@ -64,7 +64,6 @@ return (
       <div className="card-glass">
        <div className="card">
 
-
         {/* Title */}
         <h2 className="title">{paper.title}</h2>
 

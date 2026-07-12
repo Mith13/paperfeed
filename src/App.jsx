@@ -373,15 +373,15 @@ export default class App extends Component {
       <div className="app-container">
         {this.renderNavigation()}
         {this.renderSettingsMenu()}
+        <div className="nav-controls">
+          <button className="nav-btn" onClick={() => this.scrollFeed('up')}>▲</button>
+          <button className="nav-btn" onClick={() => this.scrollFeed('down')}>▼</button>
+        </div>
         <div className={feedModeClass}>
           {this.renderSearchAndFilters()}
           
           <div id="feed" ref={this.feedRef} onScroll={this.handleScroll}>
             {this.renderContent()}
-          </div>
-          <div className="nav-controls">
-            <button className="nav-btn" onClick={() => this.scrollFeed('up')}>▲</button>
-            <button className="nav-btn" onClick={() => this.scrollFeed('down')}>▼</button>
           </div>
         </div>
         {openedPaper && this.renderPdfViewer()}
