@@ -296,7 +296,7 @@ export default class App extends Component {
 
       {this.state.activeTab === 'feed' && (
         <div className="filter-container">
-          <span className="row-label">Repositories:</span>
+          {/*<span className="row-label">Repositories:</span>*/}
           {Object.keys(this.sourceMetadata).map((key) => (
             
             <label key={key} className="filter-label">

@@ -12,7 +12,7 @@
 }
 
 /* Card */
-.card-glas-s {
+.card-glass {
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 2px solid var(--glass-border);
@@ -47,7 +47,6 @@
   flex-direction: column;
   box-sizing: border-box;
   position: relative;
-  --actions-offset: 20px
 }
 
 .card-header,
@@ -213,18 +212,22 @@
 }
 
 .divider {
+  position: absolute;
   border: 0;
   height: 3px;
   background-color: #2C2E33; 
-  margin: 15px 0;            
-  width: 100%;
+  margin: 15px 0;    
+  left: 5%;          
+  right: 5%;          
+  width: 90%;
+  bottom: var(--actions-offset, 40px);
 }
 
 .actions {
   position: absolute;
   left: 3%;
   right: 3%;
-  bottom: var(--actions-offset, 20px);
+  bottom: var(--actions-offset, 10px);
   display: flex;
   gap: 5px;
   align-items: center;
@@ -274,8 +277,8 @@
 }
 
 .icon-btn svg {
-  width: 30px;
-  height: 30px;
+  width: 3vh;
+  height: 3vh;
   stroke: currentColor;
   fill: none;
   stroke-width: 1.8;
