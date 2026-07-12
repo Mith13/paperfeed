@@ -147,7 +147,7 @@ body {
   border: 1px solid transparent;
   transition: all 0.2s;
   font-weight: 900;
-  font-size: 0.9rem;
+  font-size: 90%;
   font-family: 'SF Mono', ui-monospace, 'Fira Code', monospace;
 }
 
@@ -283,7 +283,7 @@ body {
   background: transparent;
   border: none;
   color: #94a3b8;
-  font-size: 16px;
+  font-size: 80%;
   font-weight: 600;
   padding: 12px 0;
   cursor: pointer;

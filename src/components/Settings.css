@@ -9,6 +9,7 @@
   gap: var(--space-lg);
   max-width: 340px;
   box-shadow: var(--shadow-card);
+  z-index: 160;
 }
 
 .settings-slider-group {
@@ -186,7 +187,7 @@
   left: 10px;
   bottom: 20px;
   display: inline-block;
-  z-index: 60;
+  z-index: 160;
 }
 
 .cog-trigger {
@@ -195,8 +196,8 @@
   justify-content: center;
   width: 50px;
   height: 50px;
-  background: var(--bg-btn-secondary);
-  border: 1px solid var(--btn-border);
+  background: var(--bg-btn-secondary) transparent;
+  border: 0px solid var(--btn-border);
   border-radius: 10px;
   color: var(--text-secondary);
   cursor: pointer;
@@ -228,7 +229,7 @@
   bottom: calc(100% + 10px);
   top: auto;
   left: 0%;
-  z-index: 60;
+  z-index: 160;
   animation: cog-panel-in 0.16s ease;
 }
 
