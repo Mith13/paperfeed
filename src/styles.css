@@ -1,0 +1,110 @@
+
+:root {
+  /* Surfaces */
+  --bg-page:              #131316;
+  --bg-card-modern-inner: rgba(25, 25, 35, 0.95);
+
+  /* Glass layer */
+  --glass-blur:           16px;
+  --glass-border:         rgba(255, 255, 255, 0.09);
+  --glass-border-hover:   rgba(155, 127, 240, 0.35);
+  --glass-shadow:         0 20px 48px rgba(0, 0, 0, 0.55),
+                          0 0 0 1px rgba(255, 255, 255, 0.06);
+
+  /* Text */
+  --text-primary:         #f0f0f0;
+  --text-secondary:       #a0a0b0;
+  --text-muted:           #666672;
+  --text-tag:             #d0d0e0;
+  --text-label:           #6b6b7a;
+
+  /* Source badges */
+  --badge-arxiv-bg:       rgba(239, 68, 68, 0.15);
+  --badge-arxiv-color:    #fca5a5;
+  --badge-arxiv-border:   #ef4444;
+
+  --badge-biorxiv-bg:     rgba(20, 103,194, 0.15);
+  --badge-biorxiv-color:  #499bee;
+  --badge-biorxiv-border: #2b5d8e;
+
+  --badge-chemrxiv-bg:     rgba(245, 158, 11, 0.15);
+  --badge-chemrxiv-color:  #fde047;
+  --badge-chemrxiv-border: #f59e0b;
+
+  /* Tags */
+  --tag-bg:               rgba(74, 144, 156, 0.15); transparent;
+  --tag-border:           rgba(74, 144, 156, 0.4);  rgba(255, 255, 255, 0.28);
+  --tag-color:            #6092cc; #d0d0e4;
+
+  /* Buttons */
+  --btn-bg:               rgba(255, 255, 255, 0.05);
+  --btn-border:           rgba(255, 255, 255, 0.10);
+  --btn-color:            #f0f0f0;
+  --btn-read-bg:          linear-gradient(135deg, #2a2a3a, #1c1c28);
+  --btn-read-hover-bg:    #9b7ff0;
+  --btn-read-hover-color: #ffffff;
+  --btn-read-hover-border:#9b7ff0;
+  --btn-active-bg:        rgba(155, 127, 240, 0.18);
+  --btn-active-border:    #9b7ff0;
+
+  /* Radius */
+  --radius-card:          24px;
+
+  --radius-card-modern: 18px;
+  --radius-tag:       6px;
+  --radius-tag-modern: 8px;
+  --radius-btn:       10px;
+  --radius-settings:  14px;
+  --radius-slider:    6px;
+ 
+  /* Spacing */
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md:  12px;
+  --space-lg:  16px;
+  --space-xl:  20px;
+  --space-2xl: 28px;
+  --space-3xl: 36px;
+ 
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text',
+               'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'SF Mono', ui-monospace, 'Fira Code', monospace;
+ 
+  --text-xs:   11px;
+  --text-sm:   12px;
+  --text-base: 13px;
+  --text-md:   14px;
+  --text-lg:   16px;
+  --text-xl:   18px;
+  --text-2xl:  22px;
+  --text-3xl:  28px;
+  --text-4xl:  34px;
+ 
+  /* Shadows */
+  --shadow-card:    0 4px 20px rgba(0,0,0,0.35);
+  --shadow-modern:  0 8px 40px rgba(0,0,0,0.60), 0 0 0 1px var(--bg-card-modern-border);
+  --shadow-icon-btn:0 2px 6px rgba(0,0,0,0.30);
+ 
+  /* Transitions */
+  --transition: 0.18s ease;
+}
+ 
+ 
+/* ── Base Reset ─────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+ 
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-page);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
