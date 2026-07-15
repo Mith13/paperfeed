@@ -5,6 +5,7 @@ export default class PaperService {
   static CROSSREF_PREFIXES = {
     chemrxiv: '10.26434',
     biorxiv: '10.1101',
+    arxiv: '10.48550', //fallback
   };
   max_entries = 10;
 
@@ -112,7 +113,11 @@ export default class PaperService {
     const fetchPromises = selectedSources.map(source => {
       switch (source) {
         case 'arxiv':
-          return this.fetchArxiv(query, offset);
+          res = this.fetchArxiv(query, offset);
+          if(res.length == 0) {
+            res = this.fetchCrossrefSource('arxiv', query, offset);
+          }
+          return res;
         case 'biorxiv':
           return this.fetchCrossrefSource('biorxiv', query, offset);
         case 'chemrxiv':
