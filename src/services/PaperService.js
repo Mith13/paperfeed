@@ -113,7 +113,7 @@ export default class PaperService {
     const fetchPromises = selectedSources.map(source => {
       switch (source) {
         case 'arxiv':
-          res = this.fetchArxiv(query, offset);
+          let res = this.fetchArxiv(query, offset);
           if(res.length == 0) {
             res = this.fetchCrossrefSource('arxiv', query, offset);
           }
