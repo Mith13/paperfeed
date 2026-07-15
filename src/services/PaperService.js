@@ -15,7 +15,7 @@ export default class PaperService {
     console.log(`[API Request; Arxiv] Preparing to fetch ${url}.`);
     try {
       const response = await fetch(url);
-      console.log(`[API Response; Arxiv] Status: ${response.status} ${response.statusText}`);
+      console.log(`[API Response; Arxiv] Status: ${response.status} ${response.statusText} ${response.ok}`);
       if (!response.ok) return [];
       
       const xmlText = await response.text();
@@ -115,6 +115,7 @@ export default class PaperService {
         case 'arxiv':
           let res = this.fetchArxiv(query, offset);
           if(res.length == 0) {
+            console.error(`%[App State] Falling back to crossref arxiv data`);
             res = this.fetchCrossrefSource('arxiv', query, offset);
           }
           return res;
