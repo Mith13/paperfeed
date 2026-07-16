@@ -89,10 +89,12 @@ export default class App extends Component {
     
 
     let currentOffset = isNewSearch ? 0 : offset;
-    let run = 1; let max_rerun = 3;
+    let run = 1; 
+    const max_rerun = 3; 
+    const max_entries = 10;
 
     console.log("[App State] Fetching from sources. ");
-    let fetchedPapers = await PaperService.fetchAllSources(query, activeSources, currentOffset);
+    let fetchedPapers = await PaperService.fetchAllSources(query, activeSources, currentOffset, max_entries);
     if (this.state.sortML) {
         console.log(`%c[App State] Resorting according to embedding model`,"color:skyblue");
         for (const paper of fetchedPapers){
@@ -112,7 +114,7 @@ export default class App extends Component {
                 break;
             }
             run += 1;
-            currentOffset += 10;
+            currentOffset += max_entries;
         }
     }
 

@@ -8,7 +8,7 @@ export default defineConfig({
       '/api/arxiv': {
         target: 'https://export.arxiv.org/api', 
         changeOrigin: true, 
-         rewrite: (path) => path.replace(/^\/api\/arxiv/, '')
+        rewrite: (path) => path.replace(/^\/api\/arxiv/, '')
       },
 	  '/api/hf': {
         target: 'https://api-inference.huggingface.co',
