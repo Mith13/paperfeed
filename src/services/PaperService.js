@@ -16,8 +16,14 @@ export default class PaperService {
     try {
       const response = await fetch(url);
       console.log(`[API Response; Arxiv] Status: ${response.status} ${response.statusText} ${response.ok}`);
-      if (!response.ok) return [];
-      
+      if (!response.ok) {
+        // console.log(`%[App State] Falling back to crossref arxiv data`);
+        // return this.fetchCrossrefSource('arxiv', searchQuery, offset);
+        // const url = `/http://export.arxiv.org/api/query?search_query=all:${encodeURIComponent(searchQuery)}&start=${offset}&max_results=${this.max_entries}&sortBy=submittedDate&sortOrder=descending`;
+        // const response = await fetch(url);
+        // console.log(`[API Response; Arxiv] Status: ${response.status} ${response.statusText} ${response.ok}`);
+        return [];
+      }
       const xmlText = await response.text();
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlText, "text/xml");
@@ -113,10 +119,8 @@ export default class PaperService {
     const fetchPromises = selectedSources.map(source => {
       switch (source) {
         case 'arxiv':
-          let res = this.fetchArxiv(query, offset);
-          if(res.length == 0) {
-            console.error(`%[App State] Falling back to crossref arxiv data`);
-            res = this.fetchCrossrefSource('arxiv', query, offset);
+          return this.fetchArxiv(query, offset);
+          if(res === undefined || res.length == 0) {
           }
           return res;
         case 'biorxiv':
