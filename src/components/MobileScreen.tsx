@@ -65,7 +65,7 @@ export const MobileScreen: React.FC<MobileScreenProps> = ({
     }
   };
 
-  const [activeNav, setActiveNav] = useState<'feed' | 'library' | 'settings'>('feed');
+  const [activeNav, setActiveNav] = useState<'feed' | 'library' | 'liked' | 'settings'>('feed');
   const [shareToast, setShareToast] = useState<string | null>(null);
   const [isSearchExpanded, setIsSearchExpanded] = useState<boolean>(false);
 
@@ -78,10 +78,18 @@ export const MobileScreen: React.FC<MobileScreenProps> = ({
   const isLiked = (paperId: string) => likedPapers.some((p) => p.id === paperId);
   const isSaved = (paperId: string) => savedPapers.some((p) => p.id === paperId);
 
-  const basePapers = activeNav === 'library' ? savedPapers : papers;
-  const displayPapers = filterPapersByTimeRange(basePapers, activeTimeRange);
+  const basePapers =
+    activeNav === 'library'
+      ? savedPapers
+      : activeNav === 'liked'
+      ? likedPapers
+      : papers;
+  const displayPapers =
+    activeNav === 'feed'
+      ? filterPapersByTimeRange(basePapers, activeTimeRange)
+      : basePapers;
 
-  // Jump back to the first card when switching between Feed and Library
+  // Jump back to the first card when switching between Feed, Library, Liked
   useEffect(() => {
     streamRef.current?.scrollTo({ top: 0 });
     setActiveMobileIndex(0);
@@ -251,11 +259,10 @@ export const MobileScreen: React.FC<MobileScreenProps> = ({
               {/* Settings Button */}
               <button
                 onClick={onOpenSettings}
-                className="w-10 h-10 rounded-full flex items-center justify-center bg-surface-raised border border-surface-border text-text-secondary hover:text-text-primary active:scale-95 transition-all relative cursor-pointer shrink-0"
+                className="w-10 h-10 rounded-full flex items-center justify-center bg-surface-raised border border-surface-border text-text-secondary hover:text-text-primary active:scale-95 transition-all cursor-pointer shrink-0"
                 title="Recommendation Settings"
               >
                 <span className="material-symbols-outlined text-[20px]">tune</span>
-                <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-arxiv-red"></span>
               </button>
             </div>
           ) : (
@@ -293,11 +300,10 @@ export const MobileScreen: React.FC<MobileScreenProps> = ({
 
                 <button
                   onClick={onOpenSettings}
-                  className="w-10 h-10 rounded-full flex items-center justify-center bg-surface-raised border border-surface-border text-text-secondary hover:text-text-primary active:scale-95 transition-all relative cursor-pointer shadow-xs"
+                  className="w-10 h-10 rounded-full flex items-center justify-center bg-surface-raised border border-surface-border text-text-secondary hover:text-text-primary active:scale-95 transition-all cursor-pointer shadow-xs"
                   title="Recommendation Settings"
                 >
                   <span className="material-symbols-outlined text-[20px]">tune</span>
-                  <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-arxiv-red"></span>
                 </button>
               </div>
             </>
@@ -400,12 +406,14 @@ export const MobileScreen: React.FC<MobileScreenProps> = ({
         {/* EMPTY STATE */}
         {displayPapers.length === 0 && (
           <div className="w-full h-[calc(100dvh-176px)] flex flex-col items-center justify-center gap-2 text-center text-text-muted px-space-md">
-            <span className="material-symbols-outlined text-[36px]">
-              {activeNav === 'library' ? 'bookmark' : 'search_off'}
+            <span className={`material-symbols-outlined text-[36px] ${activeNav === 'liked' ? 'text-arxiv-red' : ''}`}>
+              {activeNav === 'library' ? 'bookmark' : activeNav === 'liked' ? 'favorite' : 'search_off'}
             </span>
             <p className="font-body-md text-body-md">
               {activeNav === 'library'
                 ? 'Your library is empty. Save papers to see them here.'
+                : activeNav === 'liked'
+                ? 'No liked preprints yet. Tap the heart button on papers you like!'
                 : 'No papers match your search and filters.'}
             </p>
           </div>
@@ -415,7 +423,7 @@ export const MobileScreen: React.FC<MobileScreenProps> = ({
         {displayPapers.map((paper, index) => {
           const paperLiked = isLiked(paper.id);
           const paperSaved = isSaved(paper.id);
-          const matchPct = calculateMatchPercentage(paper, savedPapers);
+          const matchPct = calculateMatchPercentage(paper, likedPapers);
 
           return (
             <PaperCard
@@ -493,7 +501,7 @@ export const MobileScreen: React.FC<MobileScreenProps> = ({
 
         {/* Item 2: My Library */}
         <a
-          className={`flex flex-col items-center justify-center py-1 px-3 active:scale-95 transition-transform duration-100 relative cursor-pointer ${
+          className={`flex flex-col items-center justify-center py-1 px-2.5 active:scale-95 transition-transform duration-100 relative cursor-pointer ${
             activeNav === 'library' ? 'text-primary' : 'text-text-muted hover:text-text-primary'
           }`}
           href="#library"
@@ -505,10 +513,31 @@ export const MobileScreen: React.FC<MobileScreenProps> = ({
           <span className="material-symbols-outlined text-[22px]" data-icon="bookmark">
             bookmark
           </span>
-          <span className="font-label-sm text-label-sm mt-0.5">My Library ({savedPapers.length})</span>
+          <span className="font-label-sm text-label-sm mt-0.5">Library ({savedPapers.length})</span>
         </a>
 
-        {/* Item 3: Settings */}
+        {/* Item 3: Liked Preprints */}
+        <a
+          className={`flex flex-col items-center justify-center py-1 px-2.5 active:scale-95 transition-transform duration-100 relative cursor-pointer ${
+            activeNav === 'liked' ? 'text-arxiv-red font-semibold' : 'text-text-muted hover:text-text-primary'
+          }`}
+          href="#liked"
+          onClick={(e) => {
+            e.preventDefault();
+            setActiveNav('liked');
+          }}
+        >
+          <span
+            className="material-symbols-outlined text-[22px]"
+            data-icon="favorite"
+            style={{ fontVariationSettings: activeNav === 'liked' ? "'FILL' 1" : "'FILL' 0" }}
+          >
+            favorite
+          </span>
+          <span className="font-label-sm text-label-sm mt-0.5">Liked ({likedPapers.length})</span>
+        </a>
+
+        {/* Item 4: Settings */}
         <a
           className={`flex flex-col items-center justify-center py-1 px-3 active:scale-95 transition-transform duration-100 cursor-pointer ${
             activeNav === 'settings' ? 'text-primary' : 'text-text-muted hover:text-text-primary'

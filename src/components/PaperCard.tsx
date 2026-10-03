@@ -306,16 +306,19 @@ export const PaperCard: React.FC<PaperCardProps> = ({
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
           {/* Like Button */}
           <button
-            onClick={() => onLikeToggle(paper, !isLiked)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onLikeToggle(paper, !isLiked);
+            }}
             className={`inline-flex items-center gap-1 rounded-lg border transition-all cursor-pointer font-medium shadow-xs active:scale-95 shrink-0 ${
               isDesktop ? 'px-3 py-2 text-label-md' : 'px-2 py-1 text-[12px]'
             } ${
               isLiked
-                ? 'border-arxiv-red/50 text-arxiv-red bg-arxiv-red/10'
+                ? 'border-arxiv-red/60 text-arxiv-red bg-arxiv-red/15 font-semibold'
                 : 'bg-surface-raised hover:bg-surface-container border-surface-border text-text-secondary hover:text-arxiv-red hover:border-arxiv-red/40'
             }`}
             id={index === 0 ? 'likeBtn' : undefined}
-            title={isLiked ? 'Unlike' : 'Like'}
+            title={isLiked ? 'Unlike (Remove from Liked Papers)' : 'Like (Add to Liked Papers)'}
           >
             <span
               className="material-symbols-outlined text-[15px] sm:text-[18px]"
@@ -333,12 +336,15 @@ export const PaperCard: React.FC<PaperCardProps> = ({
 
           {/* Save Button */}
           <button
-            onClick={() => onSaveToggle(paper)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSaveToggle(paper);
+            }}
             className={`inline-flex items-center gap-1 rounded-lg border transition-all cursor-pointer font-medium shadow-xs active:scale-95 shrink-0 ${
               isDesktop ? 'px-3 py-2 text-label-md' : 'px-2 py-1 text-[12px]'
             } ${
               isSaved
-                ? 'border-primary/50 text-primary bg-primary/10'
+                ? 'border-primary/50 text-primary bg-primary/10 font-semibold'
                 : 'bg-surface-raised hover:bg-surface-container text-text-secondary hover:text-primary hover:border-primary/40 border-surface-border'
             }`}
             id={index === 0 ? 'saveBtn' : undefined}

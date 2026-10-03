@@ -1,4 +1,5 @@
 import Paper from '../models/Paper';
+import { env, AutoModel, AutoTokenizer, Tensor } from '@huggingface/transformers';
 
 export default class RecommenderEngine {
   static embedder: any = null;
@@ -19,42 +20,15 @@ export default class RecommenderEngine {
       const startTime = performance.now();
 
       try {
-        const { AutoModel, AutoTokenizer, Tensor } = await import('@huggingface/transformers');
         const device = gpuNav ? 'webgpu' : 'wasm';
-        const model = await AutoModel.from_pretrained(this.model_id, {
-          config: { model_type: 'model2vec' } as any,
-          revision: 'main',
-          device,
-          dtype: 'fp32',
-        });
-        const tokenizer = await AutoTokenizer.from_pretrained(this.model_id, {
-          revision: 'main',
-        });
-
-        this.embedder = async (texts: string[]) => {
-          const { input_ids } = await tokenizer(texts, {
-            add_special_tokens: false,
-            return_tensor: false,
-          });
-          const offsets = [0];
-          for (let i = 0; i < input_ids.length - 1; i++) {
-            offsets.push(offsets[i] + input_ids[i].length);
-          }
-          const flattened_input_ids = input_ids.flat();
-          const model_inputs = {
-            input_ids: new Tensor(
-              'int64',
-              BigInt64Array.from(flattened_input_ids.map(BigInt)),
-              [flattened_input_ids.length]
-            ),
-            offsets: new Tensor('int64', BigInt64Array.from(offsets.map(BigInt)), [
-              offsets.length,
-            ]),
-          };
-          const { embeddings } = await model(model_inputs);
-          return embeddings;
-        };
-
+        this.embedder = await this._createEmbedder(this.model_id,
+                 {
+                  model_type: "model2vec",
+                  model_revision : "main",
+                  tokenizer_revision : "main",
+                  device: device,
+                  dtype: "fp32",
+                 });
         const duration = (performance.now() - startTime).toFixed(2);
         console.log(`%c[AI Engine] Model loaded successfully in ${duration}ms via ${gpuNav ? "webgpu" : "wasm"}.`, "color: #00cc66; font-weight: bold;");
         return this.embedder;
@@ -67,6 +41,47 @@ export default class RecommenderEngine {
     })();
 
     return this.embedderPromise;
+  }
+
+  // taken from https://github.com/MinishLab/model2vec/issues/75
+  static async _createEmbedder(model_name: string, options: Record<string, any> = {}) {
+    const {
+      model_type = "model2vec",
+      model_revision = "main",
+      tokenizer_revision = "main",
+      device = "wasm",
+      dtype = "fp32",
+    } = options;
+
+    const model = await AutoModel.from_pretrained(model_name, {
+      config: { model_type } as any,
+      revision: model_revision,
+      device,
+      dtype,
+    });
+    const tokenizer = await AutoTokenizer.from_pretrained(model_name, {
+      revision: tokenizer_revision,
+    });
+
+    return async (texts: string[]) => {
+      const { input_ids } = (await tokenizer(texts, {
+        add_special_tokens: false,
+        return_tensor: false,
+      })) as any;
+
+      const offsets = [0];
+      for (let i = 0; i < input_ids.length - 1; i++) {
+        offsets.push(offsets[i] + input_ids[i].length);
+      }
+
+      const flattened_input_ids = input_ids.flat();
+      const model_inputs = {
+        input_ids: new Tensor("int64", BigInt64Array.from(flattened_input_ids.map(BigInt)), [flattened_input_ids.length]),
+        offsets: new Tensor("int64", BigInt64Array.from(offsets.map(BigInt)), [offsets.length]),
+      };
+      const { embeddings } = await (model as any)(model_inputs);
+      return embeddings;
+    };
   }
 
   static async getEmbedding(paper: Paper): Promise<number[]> {
@@ -238,3 +253,4 @@ export default class RecommenderEngine {
     return sorted.length > 0 ? sorted : incomingPapers;
   }
 }
+

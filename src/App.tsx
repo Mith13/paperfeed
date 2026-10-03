@@ -1,8 +1,3 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence, type Variants } from 'motion/react';
 import Paper from './models/Paper';
@@ -35,10 +30,40 @@ export default function App() {
   // TimeRange filter state: 'this month' | 'this year' | 'all time'
   const [timeRange, setTimeRange] = useState<TimeRange>('all time');
 
-  // Paper and Recommender state 
+  // Paper and Recommender state (synchronously loaded on start from localStorage)
   const [papers, setPapers] = useState<Paper[]>([]);
-  const [likedPapers, setLikedPapers] = useState<Paper[]>([]);
-  const [savedPapers, setSavedPapers] = useState<Paper[]>([]);
+  const [likedPapers, setLikedPapers] = useState<Paper[]>(() => {
+    try {
+      const storedLikes = typeof window !== 'undefined' ? localStorage.getItem('likedPapers') : null;
+      if (storedLikes) {
+        const parsedLikes = JSON.parse(storedLikes);
+        console.log(`[Storage Cache] Found ${parsedLikes.length} verified liked papers in localStorage.`);
+        return parsedLikes.map((p: any) => new Paper(p));
+      } else {
+        console.log("[Storage Cache] No historical liked papers found in localStorage.");
+      }
+    } catch (e) {
+      console.error('[Storage Cache] Error hydrating likedPapers:', e);
+    }
+    return [];
+  });
+
+  const [savedPapers, setSavedPapers] = useState<Paper[]>(() => {
+    try {
+      const storedSaved = typeof window !== 'undefined' ? localStorage.getItem('savedPapers') : null;
+      if (storedSaved) {
+        const parsedPapers = JSON.parse(storedSaved);
+        console.log(`[Storage Cache] Found ${parsedPapers.length} verified saved papers in localStorage.`);
+        return parsedPapers.map((p: any) => new Paper(p));
+      } else {
+        console.log("[Storage Cache] No historical saved papers found in localStorage.");
+      }
+    } catch (e) {
+      console.error('[Storage Cache] Error hydrating savedPapers:', e);
+    }
+    return [];
+  });
+
   const [openedPaper, setOpenedPaper] = useState<Paper | null>(null);
   const [activeSources, setActiveSources] = useState<Record<string, boolean>>({
     arxiv: true,
@@ -61,30 +86,6 @@ export default function App() {
     biorxiv: { label: 'bioRxiv' },
     chemrxiv: { label: 'chemRxiv' },
   };
-
-  // Hydrate local cache on mount
-  useEffect(() => {
-    console.log("[App Lifecycle] Component mounted. Hydrating local cache configurations...");
-    try {
-      const storedLikes = localStorage.getItem('likedPapers');
-      if (storedLikes) {
-        const parsedLikes = JSON.parse(storedLikes);
-        console.log(`[Storage Cache] Found ${parsedLikes.length} verified liked papers in localStorage.`);
-        setLikedPapers(parsedLikes.map((p: any) => new Paper(p)));
-      } else {
-        console.log("[Storage Cache] No historical user data found. Initializing fresh canvas.");
-      }
-
-      const storedSaved = localStorage.getItem('savedPapers');
-      if (storedSaved) {
-        const parsedPapers = JSON.parse(storedSaved);
-        console.log(`[Storage Cache] Found ${parsedPapers.length} verified saved papers in localStorage.`);
-        setSavedPapers(parsedPapers.map((p: any) => new Paper(p)));
-      }
-    } catch (e) {
-      console.error('[Storage Cache] Error hydrating localStorage:', e);
-    }
-  }, []);
 
   // Fetch papers from API sources
   const loadPapers = useCallback(
@@ -167,13 +168,11 @@ export default function App() {
 
       // Keep the ordering of the original batch but sort new batch based on cosine similarity value if there are saved papers
       let batchToAppend = newBatch;
-      if (savedPapers.length > 0) {
-        console.log(
-          `[App State] Sorting incoming batch (${newBatch.length} papers) by cosine similarity against ${savedPapers.length} saved papers.`
-        );
-        batchToAppend = await RecommenderEngine.sortPapersBySaved(newBatch, savedPapers);
-      } else if (likedPapers.length > 0) {
+      if (likedPapers.length > 0) {
         batchToAppend = await RecommenderEngine.rankPapers(newBatch, likedPapers, minSimilarity);
+        console.log(
+          `[App State] Sorting incoming batch (${newBatch.length} papers) by cosine similarity against ${likedPapers.length} liked papers.`
+        );
       }
 
       // Append to feed, strictly keeping original batch ordering
@@ -203,64 +202,83 @@ export default function App() {
     }
   }, [papers, savedPapers, activeTab]);
 
-  // Handle Like Toggle with Recommender Re-ranking 
-  const handleLikeToggle = async (paper: Paper, isLiked: boolean) => {
-    console.log(`[User Action] Intercepted Like Toggle. Paper ID: ${paper.id} | New Status: ${isLiked}`);
-    console.log(`[User Action] Liked paper: ${paper.id}`);
+  // Handle Like Toggle
+  const handleLikeToggle = useCallback((paper: Paper, targetStatus?: boolean) => {
+    console.log(`[User Action] Toggling like for paper: ${paper.id}`);
 
-    let updatedLikes = [...likedPapers];
-    if (isLiked) {
-      if (!updatedLikes.some((p) => p.id === paper.id)) {
-        if (!paper.embedding) {
-          console.log("[User Action] Fetching dynamic vector before adding entry to cache...");
-          paper.embedding = await RecommenderEngine.getEmbedding(paper);
+    setLikedPapers((prevLikes) => {
+      const alreadyLiked = prevLikes.some((p) => p.id === paper.id);
+      const shouldBeLiked = targetStatus !== undefined ? targetStatus : !alreadyLiked;
+
+      let updatedLikes: Paper[];
+      if (shouldBeLiked) {
+        if (!alreadyLiked) {
+          console.log(`[App state] Paper is not liked, adding it`);
+          // Prepend so latest liked papers show at top
+          updatedLikes = [paper, ...prevLikes];
+        } else {
+          updatedLikes = prevLikes;
         }
-        updatedLikes.push(paper);
+      } else {
+        console.log(`[App state] Paper is liked, removing it`);
+        updatedLikes = prevLikes.filter((p) => p.id !== paper.id);
       }
-    } else {
-      updatedLikes = updatedLikes.filter((p) => p.id !== paper.id);
-    }
 
-    setLikedPapers(updatedLikes);
-    console.log(`[Storage Cache] Updating browser localStorage payload size: ${updatedLikes.length} instances.`);
-    try {
-      localStorage.setItem('likedPapers', JSON.stringify(updatedLikes));
-    } catch (err) {
-      console.warn('localStorage setItem failed:', err);
-    }
+      console.log(`[App State] Updating liked papers ${updatedLikes.length} items`);
+      try {
+        localStorage.setItem('likedPapers', JSON.stringify(updatedLikes));
+      } catch (err) {
+        console.warn('localStorage setItem failed:', err);
+      }
 
-    // Re-rank feed if user likes/unlikes
-    if (activeTab === 'feed') {
-      const reRanked = await RecommenderEngine.rankPapers(
-        papers,
-        updatedLikes,
-        minSimilarity
-      );
-      setPapers(reRanked);
+      return updatedLikes;
+    });
+
+    // Compute embedding in background asynchronously (without blocking UI or state update)
+    if (!paper.embedding || paper.embedding.length === 0) {
+      RecommenderEngine.getEmbedding(paper)
+        .then((vector) => {
+          if (vector && vector.length > 0) {
+            paper.embedding = vector;
+            setLikedPapers((prev) => {
+              const updated = prev.map((p) => (p.id === paper.id ? paper : p));
+              try {
+                localStorage.setItem('likedPapers', JSON.stringify(updated));
+              } catch (_) {}
+              return updated;
+            });
+          }
+        })
+        .catch((err) => {
+          console.warn('[Recommender] Non-blocking embedding generation failed:', err);
+        });
     }
-  };
+  }, []);
 
   // Handle Save Toggle 
-  const handleSaveToggle = (paper: Paper) => {
+  const handleSaveToggle = useCallback((paper: Paper) => {
     console.log(`[User Action] Saving paper: ${paper.id}`);
-    let updatedLibrary: Paper[];
-    const alreadySaved = savedPapers.some((p) => p.id === paper.id);
+    setSavedPapers((prevSaved) => {
+      const alreadySaved = prevSaved.some((p) => p.id === paper.id);
+      let updatedLibrary: Paper[];
 
-    if (alreadySaved) {
-      console.log(`[App state] Paper is saved, removing it`);
-      updatedLibrary = savedPapers.filter((p) => p.id !== paper.id);
-    } else {
-      updatedLibrary = [paper, ...savedPapers];
-    }
+      if (alreadySaved) {
+        console.log(`[App state] Paper is saved, removing it`);
+        updatedLibrary = prevSaved.filter((p) => p.id !== paper.id);
+      } else {
+        console.log(`[App state] Paper is not saved, adding it`);
+        updatedLibrary = [paper, ...prevSaved];
+      }
 
-    setSavedPapers(updatedLibrary);
-    console.log(`[App State] Updating saved papers ${JSON.stringify(updatedLibrary).length} bytes`);
-    try {
-      localStorage.setItem('savedPapers', JSON.stringify(updatedLibrary));
-    } catch (err) {
-      console.warn('localStorage setItem failed:', err);
-    }
-  };
+      console.log(`[App State] Updating saved papers ${updatedLibrary.length} items`);
+      try {
+        localStorage.setItem('savedPapers', JSON.stringify(updatedLibrary));
+      } catch (err) {
+        console.warn('localStorage setItem failed:', err);
+      }
+      return updatedLibrary;
+    });
+  }, []);
 
   // Clear library and likes
   const handleClearLibrary = () => {

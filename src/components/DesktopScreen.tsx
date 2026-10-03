@@ -3,6 +3,7 @@ import Paper from '../models/Paper';
 import { AppTheme } from '../utils/theme';
 import { PaperCard, calculateMatchPercentage } from './PaperCard';
 import { TimeRange, filterPapersByTimeRange } from '../utils/timeRange';
+import { AboutModal } from './Modals';
 
 interface DesktopScreenProps {
   papers: Paper[];
@@ -72,6 +73,7 @@ export const DesktopScreen: React.FC<DesktopScreenProps> = ({
   const [activeSidebarNav, setActiveSidebarNav] = useState<string>('feed');
   const [currentReaderPaper, setCurrentReaderPaper] = useState<Paper | null>(openedPaper);
   const [activeDesktopIndex, setActiveDesktopIndex] = useState<number>(0);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
 
   useEffect(() => {
     if (initialSearchQuery !== undefined) {
@@ -85,6 +87,12 @@ export const DesktopScreen: React.FC<DesktopScreenProps> = ({
     }
   }, [openedPaper]);
 
+  // Reset scroll and index when switching tabs (Feed, Library, Liked)
+  useEffect(() => {
+    desktopFeedRef.current?.scrollTo({ top: 0 });
+    setActiveDesktopIndex(0);
+  }, [activeSidebarNav]);
+
   const isLiked = (paperId: string) => likedPapers.some((p) => p.id === paperId);
   const isSaved = (paperId: string) => savedPapers.some((p) => p.id === paperId);
 
@@ -94,7 +102,10 @@ export const DesktopScreen: React.FC<DesktopScreenProps> = ({
       : activeSidebarNav === 'liked'
       ? likedPapers
       : papers;
-  const displayPapers = filterPapersByTimeRange(basePapers, activeTimeRange);
+  const displayPapers =
+    activeSidebarNav === 'feed'
+      ? filterPapersByTimeRange(basePapers, activeTimeRange)
+      : basePapers;
   const currentPaper = displayPapers[activeDesktopIndex] || displayPapers[0] || papers[0];
 
   const scrollDesktopFeed = (direction: 'up' | 'down') => {
@@ -208,11 +219,10 @@ export const DesktopScreen: React.FC<DesktopScreenProps> = ({
         {/* Brand / Mobile Left Toggle */}
         <div className="flex items-center gap-4">
           {/* Element (xpath: //header//div[contains(@class, 'flex items-center gap-2.5') and .//span[text()='PaperFeed']]) */}
-          {/* Navigates to Mobile Screen with push_back transition */}
           <div
             className="flex items-center gap-2.5 cursor-pointer hover:opacity-85 transition-opacity group"
-            onClick={() => onNavigateToMobile('push_back')}
-            title="Switch to Mobile View (push_back)"
+            onClick={() => setIsAboutModalOpen(true)}
+            title="About PaperFeed"
           >
             <div className="w-8 h-8 rounded-lg bg-surface-raised border border-surface-border flex items-center justify-center text-primary shadow-inner group-hover:border-primary/50 transition-colors">
               <span className="material-symbols-outlined text-[20px]" data-icon="auto_stories">
@@ -326,7 +336,7 @@ export const DesktopScreen: React.FC<DesktopScreenProps> = ({
                 onClick={(e) => {
                   e.preventDefault();
                   setActiveSidebarNav('feed');
-                  onNavigateToMobile('none');
+                  {/*onNavigateToMobile('none'); */}
                 }}
                 title="Switch to Mobile View (none transition)"
               >
@@ -539,7 +549,7 @@ export const DesktopScreen: React.FC<DesktopScreenProps> = ({
             {displayPapers.map((paper, index) => {
               const isPaperLiked = isLiked(paper.id);
               const isPaperSaved = isSaved(paper.id);
-              const matchPct = calculateMatchPercentage(paper, savedPapers);
+              const matchPct = calculateMatchPercentage(paper, likedPapers);
 
               return (
                 <div
@@ -705,6 +715,9 @@ export const DesktopScreen: React.FC<DesktopScreenProps> = ({
           <span className="text-label-sm font-label-sm mt-0.5">Settings</span>
         </a>
       </nav>
+
+      {/* About Application Modal */}
+      <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
     </div>
   );
 };
